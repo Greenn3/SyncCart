@@ -17,7 +17,7 @@ function App() {
     e.preventDefault();
     const newItem = { name };
 
-    fetch('http://localhost:8080/items', {
+    fetch('http://80.211.200.112:8080/items', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newItem),
