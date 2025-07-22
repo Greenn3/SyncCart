@@ -34,7 +34,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://frontend:80"); // Docker-internal name// frontend URL
+        config.addAllowedOrigin("http://frontend:80");
+        config.addAllowedOrigin("http://80.211.200.112:3000");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
