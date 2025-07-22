@@ -15,6 +15,17 @@ services:
       - "27017:27017"
     volumes:
       - mongo-dev-data:/data/db  # <-- tutaj volume
+  frontend:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm start"
+    depends_on:
+      - backend
 
 volumes:
   mongo-dev-data:

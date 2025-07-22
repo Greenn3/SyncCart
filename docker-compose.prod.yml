@@ -16,6 +16,11 @@ services:
       - "27017:27017"
     volumes:
       - mongo-prod-data:/data/db  # <–– tu przypisujemy volume
-
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 volumes:
   mongo-prod-data:
