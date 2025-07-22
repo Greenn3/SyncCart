@@ -1,0 +1,21 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-prod-data:/data/db  # <–– tu przypisujemy volume
+
+volumes:
+  mongo-prod-data:
