@@ -7,7 +7,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/items")
+@RequestMapping("/items")
 public class ItemController {
 private final ItemService itemService;
 
