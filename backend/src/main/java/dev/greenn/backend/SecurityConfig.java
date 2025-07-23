@@ -38,6 +38,7 @@ public class SecurityConfig {
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedOrigin("http://frontend:80");
         config.addAllowedOrigin("http://80.211.200.112:3000");
+        config.addAllowedOrigin("https://sync-cart.uno");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
