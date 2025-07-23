@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 function App() {
   const [items, setItems] = useState([]);
   const [name, setName] = useState('');
+    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
   // GET /items
   useEffect(() => {
-    fetch('http://localhost:8080/items')
+    fetch(`${API_URL}/items`)
         .then(res => res.json())
         .then(data => setItems(data))
         .catch(err => console.error('Błąd przy pobieraniu:', err));
@@ -17,7 +18,7 @@ function App() {
     e.preventDefault();
     const newItem = { name };
 
-    fetch('http://80.211.200.112:8080/items', {
+    fetch(`${API_URL}/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newItem),
