@@ -7,7 +7,8 @@ services:
       - "8080:8080"
     depends_on:
       - mongo
-
+    networks:
+      - app-network
 
   mongo:
     image: mongo:6
@@ -15,7 +16,10 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo-prod-data:/data/db  # <–– tu przypisujemy volume
+      - mongo-prod-data:/data/db
+    networks:
+      - app-network
+
   frontend:
     build: ./frontend
     ports:
@@ -25,5 +29,11 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
+    networks:
+      - app-network
+
 volumes:
   mongo-prod-data:
+
+networks:
+  app-network:
