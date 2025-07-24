@@ -1,19 +1,19 @@
-package dev.greenn.backend.item;
+package dev.greenn.backend.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@Document
-@AllArgsConstructor
-public class Item {
-@Id
+public class User {
+    @Id
     String id;
-    String name;
-    String listId;
-    String creatorId;
+    String username;
 }

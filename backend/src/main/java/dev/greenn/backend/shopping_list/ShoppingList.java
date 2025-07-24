@@ -1,19 +1,23 @@
-package dev.greenn.backend.item;
+package dev.greenn.backend.shopping_list;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
-@Document
 @AllArgsConstructor
-public class Item {
-@Id
+@NoArgsConstructor
+@Document
+public class ShoppingList {
+    @Id
     String id;
     String name;
-    String listId;
-    String creatorId;
+    List<String> allowedUsers = new ArrayList<>();
 }

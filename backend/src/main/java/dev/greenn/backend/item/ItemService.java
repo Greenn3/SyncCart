@@ -19,4 +19,8 @@ public class ItemService {
     public Mono<Item> createItem(Item item) {
         return itemRepository.save(item);
     }
+
+    public Flux<Item> findAllByListId(String id) {
+        return itemRepository.findAllByListId(id);
+    }
 }

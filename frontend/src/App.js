@@ -1,77 +1,154 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-
-
+import {
+    Typography,
+    AppBar,
+    CardActions,
+    CardContent,
+    CardMedia,
+    CssBaseline,
+    Grid,
+    Toolbar,
+    Container,
+    Box, Button
+} from '@mui/material';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import ListForm from "./components/ListForm";
+import ListDisplay from "./components/ListDisplay";
+import {getAllLists} from "./api/lists";
+import {getItemsByListId} from "./api/items";
+import ItemForm from "./components/ItemForm";
+import ItemDisplay from "./components/ItemDisplay";
+import {attachIdToken, clearIdToken} from "./axiosInstance";
+import {sendIdTokenToBackend} from "./api/users";
 function App() {
-    const [items, setItems] = useState([]);
+//const listId = "68822960feb1fead2f5834cc";
     const [name, setName] = useState('');
     const [user, setUser] = useState(null);
-    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
 
-    // GET /items
+
+    const [lists, setLists] = useState([]);
+    const [items, setItems] = useState([]);
+    const [selectedListId, setSelectedListId] = useState(null);
+    //
+    // useEffect(() => {
+    //     getAllLists()
+    //         .then((res) => setLists(res.data))
+    //         .catch((err) => console.error("Błąd przy pobieraniu list:", err));
+    // }, []);
+
+    const handleListCreated = (newList) => {
+        setLists((prev) => [...prev, newList]);
+    };
+    const fetchLists = async () => {
+        try {
+            const res = await getAllLists(); // z API
+            setLists(res.data);
+        } catch (err) {
+            console.error("Błąd przy pobieraniu list:", err);
+        }
+    };
     useEffect(() => {
-        fetch(`${API_URL}/items`)
-            .then(res => res.json())
-            .then(data => setItems(data))
-            .catch(err => console.error('Błąd przy pobieraniu:', err));
-    }, []);
+        if (selectedListId) {
+            getItemsByListId(selectedListId)
+                .then((res) => setItems(res.data))
+                .catch((err) => console.error("Błąd przy pobieraniu przedmiotu:", err));
+        } else {
+            setItems([]);
+        }
+    }, [selectedListId]);
 
-    // POST /items
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const newItem = { name };
-
-        fetch(`${API_URL}/items`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newItem),
-        })
-            .then(res => res.json())
-            .then(data => {
-                setItems([...items, data]);
-                setName('');
-            })
-            .catch(err => console.error('Błąd przy dodawaniu:', err));
+    const handleItemCreated = (newItem) => {
+        setItems((prev) => [...prev, newItem]);
     };
 
-    const handleLoginSuccess = (credentialResponse) => {
-        const decoded = jwtDecode(credentialResponse.credential);
-        setUser(decoded);
+    useEffect(() => {
+        if (user) {
+            fetchLists();  // tylko jeśli ktoś zalogowany
+        } else {
+            setLists([]);  // wyczyść po wylogowaniu
+        }
+    }, [user]);
+
+
+    const handleLoginSuccess = async (credentialResponse) => {
+        const idToken = credentialResponse.credential;
+        setUser(jwtDecode(idToken));
+        attachIdToken(idToken);
+      //  localStorage.setItem('google_id_token', idToken); // opcjonalnie
+        // Wyślij token do backendu
+        try {
+            await sendIdTokenToBackend(idToken);
+        } catch (err) {
+            console.error("Błąd podczas wysyłania tokena:", err);
+        }
     };
 
     const handleLogout = () => {
         googleLogout();
+        clearIdToken();
         setUser(null);
+        setLists([]);
     };
 
     return (
-        <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-            <h2>Lista produktów</h2>
+        <div>
+        <CssBaseline/>
 
-            {user ? (
-                <div style={{ marginBottom: '1rem' }}>
-                    <p>Zalogowano jako: <strong>{user.name}</strong></p>
-                    <button onClick={handleLogout}>Wyloguj</button>
+            <AppBar position="relative">
+                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+
+                    {/* Lewa strona */}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <ShoppingCartIcon sx={{ mr: 1 }} />
+                        <Typography variant="h6">SyncCart</Typography>
+                    </Box>
+
+                    {/* Prawa strona */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {user ? (
+                            <>
+                                <Typography variant="body1">
+                                    Zalogowano jako: <strong>{user.name}</strong>
+                                </Typography>
+                                <Button variant="outlined" color="inherit" onClick={handleLogout}>
+                                    Wyloguj
+                                </Button>
+                            </>
+                        ) : (
+                            <GoogleLogin onSuccess={handleLoginSuccess} onError={() => console.log("Login failed")} />
+                        )}
+                    </Box>
+
+                </Toolbar>
+            </AppBar>
+            <main>
+                <div>
+                    <Container>
+                        <div style={{ padding: "2rem" }}>
+
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h1 style={{ marginRight: '1rem' }}>Moje listy zakupów</h1>
+                                <ListForm onListCreated={handleListCreated} />
+                            </div>
+                            <ListDisplay lists={lists} onListSelect={setSelectedListId} selectedListId={selectedListId} />
+
+                            {selectedListId && (
+                                <>
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', marginTop: '2rem' }}>
+                                        <h1 style={{ marginRight: '1rem' }}>Przedmioty</h1>
+                                        <ItemForm onItemCreated={handleItemCreated} listId={selectedListId} />
+                                    </div>
+                                    <ItemDisplay items={items} />
+                                </>
+                            )}
+                        </div>
+                    </Container>
                 </div>
-            ) : (
-                <GoogleLogin onSuccess={handleLoginSuccess} onError={() => console.log("Login failed")} />
-            )}
+            </main>
 
-            <ul>
-                {items.map(item => (
-                    <li key={item.id}>{item.name}</li>
-                ))}
-            </ul>
-
-            <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
-                <input
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Nowy produkt"
-                />
-                <button type="submit">Dodaj</button>
-            </form>
         </div>
     );
 }
