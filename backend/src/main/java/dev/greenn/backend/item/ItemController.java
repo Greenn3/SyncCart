@@ -2,6 +2,7 @@ package dev.greenn.backend.item;
 
 import dev.greenn.backend.item.Item;
 import dev.greenn.backend.item.ItemService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,12 @@ private final ItemService itemService;
     public Flux<Item> getItemsByListId(@PathVariable String id){
 
         return itemService.findAllByListId((id));
+    }
+
+    @DeleteMapping("/{id}")
+    public Mono<ResponseEntity<Void>> deleteItem(@PathVariable String id){
+        return itemService.deleteItem(id)
+                .thenReturn(ResponseEntity.noContent().build());
     }
 
 }

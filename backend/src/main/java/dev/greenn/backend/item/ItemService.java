@@ -1,5 +1,6 @@
 package dev.greenn.backend.item;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,5 +23,9 @@ public class ItemService {
 
     public Flux<Item> findAllByListId(String id) {
         return itemRepository.findAllByListId(id);
+    }
+
+    public Mono<Void> deleteItem(String id) {
+         return    itemRepository.deleteById(id);
     }
 }

@@ -16,4 +16,7 @@ public class Item {
     String name;
     String listId;
     String creatorId;
+    String quantity;
+    String price;
+    String store;
 }

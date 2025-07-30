@@ -17,27 +17,20 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ListForm from "./components/ListForm";
 import ListDisplay from "./components/ListDisplay";
 import {getAllLists} from "./api/lists";
-import {getItemsByListId} from "./api/items";
+import {deleteItem, getItemsByListId} from "./api/items";
 import ItemForm from "./components/ItemForm";
 import ItemDisplay from "./components/ItemDisplay";
 import {attachIdToken, clearIdToken} from "./axiosInstance";
 import {sendIdTokenToBackend} from "./api/users";
 function App() {
-//const listId = "68822960feb1fead2f5834cc";
+
     const [name, setName] = useState('');
     const [user, setUser] = useState(null);
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
-
-
     const [lists, setLists] = useState([]);
     const [items, setItems] = useState([]);
     const [selectedListId, setSelectedListId] = useState(null);
-    //
-    // useEffect(() => {
-    //     getAllLists()
-    //         .then((res) => setLists(res.data))
-    //         .catch((err) => console.error("Błąd przy pobieraniu list:", err));
-    // }, []);
+
 
     const handleListCreated = (newList) => {
         setLists((prev) => [...prev, newList]);
@@ -50,6 +43,16 @@ function App() {
             console.error("Błąd przy pobieraniu list:", err);
         }
     };
+    const handleItemDelete = async (itemId) => {
+        try {
+            await deleteItem(itemId); // wykonaj zapytanie do API
+            // Odśwież listę itemów lokalnie
+            setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+        } catch (error) {
+            console.error("Błąd przy usuwaniu elementu:", error);
+        }
+    };
+
     useEffect(() => {
         if (selectedListId) {
             getItemsByListId(selectedListId)
@@ -77,8 +80,7 @@ function App() {
         const idToken = credentialResponse.credential;
         setUser(jwtDecode(idToken));
         attachIdToken(idToken);
-      //  localStorage.setItem('google_id_token', idToken); // opcjonalnie
-        // Wyślij token do backendu
+
         try {
             await sendIdTokenToBackend(idToken);
         } catch (err) {
@@ -91,6 +93,8 @@ function App() {
         clearIdToken();
         setUser(null);
         setLists([]);
+        setItems([]);
+        setSelectedListId(null);
     };
 
     return (
@@ -141,7 +145,7 @@ function App() {
                                         <h1 style={{ marginRight: '1rem' }}>Przedmioty</h1>
                                         <ItemForm onItemCreated={handleItemCreated} listId={selectedListId} />
                                     </div>
-                                    <ItemDisplay items={items} />
+                                    <ItemDisplay items={items} onDelete={handleItemDelete}/>
                                 </>
                             )}
                         </div>

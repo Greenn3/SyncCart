@@ -4,7 +4,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import {CssBaseline, ThemeProvider} from "@mui/material";
+import theme from './theme';
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 
 
 const clientId = '183773098779-av4gfomlnkno2qvp5o7nkubvrlci1qan.apps.googleusercontent.com';
@@ -13,7 +16,10 @@ const clientId = '183773098779-av4gfomlnkno2qvp5o7nkubvrlci1qan.apps.googleuserc
 root.render(
     <React.StrictMode>
         <GoogleOAuthProvider clientId={clientId}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
             <App />
+                </ThemeProvider>
         </GoogleOAuthProvider>
     </React.StrictMode>
 );
