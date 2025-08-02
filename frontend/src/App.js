@@ -11,17 +11,18 @@ import {
     Grid,
     Toolbar,
     Container,
-    Box, Button
+    Box, Button, Stack
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ListForm from "./components/ListForm";
 import ListDisplay from "./components/ListDisplay";
-import {getAllLists} from "./api/lists";
+import {deleteList, getAllLists} from "./api/lists";
 import {deleteItem, getItemsByListId} from "./api/items";
 import ItemForm from "./components/ItemForm";
 import ItemDisplay from "./components/ItemDisplay";
 import {attachIdToken, clearIdToken} from "./axiosInstance";
 import {sendIdTokenToBackend} from "./api/users";
+import AddUserForm from "./components/AddUserForm";
 function App() {
 
     const [name, setName] = useState('');
@@ -30,6 +31,30 @@ function App() {
     const [lists, setLists] = useState([]);
     const [items, setItems] = useState([]);
     const [selectedListId, setSelectedListId] = useState(null);
+
+    // Check for existing token on component mount
+    useEffect(() => {
+        const storedToken = localStorage.getItem('google_id_token');
+        if (storedToken) {
+            try {
+                const decodedUser = jwtDecode(storedToken);
+
+                // Check if token is expired
+                const currentTime = Date.now() / 1000;
+                if (decodedUser.exp && decodedUser.exp < currentTime) {
+                    console.log("Token expired, logging out");
+                    clearIdToken();
+                    return;
+                }
+
+                setUser(decodedUser);
+                // No need to call attachIdToken since it's already in localStorage
+            } catch (error) {
+                console.error("Error decoding stored token:", error);
+                clearIdToken(); // Clear invalid token
+            }
+        }
+    }, []);
 
 
     const handleListCreated = (newList) => {
@@ -48,6 +73,19 @@ function App() {
             await deleteItem(itemId); // wykonaj zapytanie do API
             // Odśwież listę itemów lokalnie
             setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+        } catch (error) {
+            console.error("Błąd przy usuwaniu elementu:", error);
+        }
+    };
+  const handleListDelete = async (listId) => {
+        try {
+            await deleteList(listId); // wykonaj zapytanie do API
+            // Odśwież listę itemów lokalnie
+            setLists((prevLists) => prevLists.filter((list) => list.id !== listId));
+            // Reset selectedListId if the deleted list was selected
+            if (selectedListId === listId) {
+                setSelectedListId(null);
+            }
         } catch (error) {
             console.error("Błąd przy usuwaniu elementu:", error);
         }
@@ -134,10 +172,12 @@ function App() {
                         <div style={{ padding: "2rem" }}>
 
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                                <Stack  direction="row" spacing={2}>
                                 <h1 style={{ marginRight: '1rem' }}>Moje listy zakupów</h1>
                                 <ListForm onListCreated={handleListCreated} />
+                                </Stack>
                             </div>
-                            <ListDisplay lists={lists} onListSelect={setSelectedListId} selectedListId={selectedListId} />
+                            <ListDisplay lists={lists} onListSelect={setSelectedListId} selectedListId={selectedListId}  onDelete={handleListDelete}/>
 
                             {selectedListId && (
                                 <>
@@ -146,6 +186,11 @@ function App() {
                                         <ItemForm onItemCreated={handleItemCreated} listId={selectedListId} />
                                     </div>
                                     <ItemDisplay items={items} onDelete={handleItemDelete}/>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '2rem' }}>
+                                        <h3 style={{ marginRight: '1rem' }}> Dodaj użytkownika do listy</h3>
+                                        <AddUserForm listId={selectedListId} />
+                                    </div>
                                 </>
                             )}
                         </div>

@@ -33,4 +33,8 @@ private  final GoogleTokenVerifier googleVerifier;
         return userRepository.findById(id)
                 .switchIfEmpty(userRepository.save(new User(id, name)));
     }
+
+    public Mono<Boolean> userExistsById(String id) {
+        return userRepository.existsById(id);
     }
+}

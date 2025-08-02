@@ -34,4 +34,9 @@ public class ShoppingListController {
         return shoppingListService.deleteListWithItems(id)
                 .thenReturn(ResponseEntity.noContent().build());
     }
+
+    @PatchMapping("/{listId}/users/{userId}")
+    public Mono<ResponseEntity<Void>> addUserToList(@PathVariable String listId, @PathVariable String userId){
+        return shoppingListService.addUserToList(listId, userId).thenReturn(ResponseEntity.ok().build());
+    }
 }
