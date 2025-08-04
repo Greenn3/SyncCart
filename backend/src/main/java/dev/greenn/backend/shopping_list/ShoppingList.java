@@ -1,5 +1,6 @@
 package dev.greenn.backend.shopping_list;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 public class ShoppingList {
     @Id
     String id;
+    @NotBlank(message = "Name cannot be blank")
     String name;
     List<String> allowedUsers = new ArrayList<>();
 }

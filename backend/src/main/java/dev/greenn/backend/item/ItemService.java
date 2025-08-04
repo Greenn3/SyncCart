@@ -1,6 +1,6 @@
 package dev.greenn.backend.item;
 
-import org.springframework.http.ResponseEntity;
+import dev.greenn.backend.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,10 +22,14 @@ public class ItemService {
     }
 
     public Flux<Item> findAllByListId(String id) {
-        return itemRepository.findAllByListId(id);
+        return itemRepository.findAllByListId(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Items with list id " + id + " do not exist")));
     }
 
     public Mono<Void> deleteItem(String id) {
-         return    itemRepository.deleteById(id);
+
+        return itemRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Item with id " + id + " not found")))
+                .flatMap(item -> itemRepository.deleteById(id));
     }
 }

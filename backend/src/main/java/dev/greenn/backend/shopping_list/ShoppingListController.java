@@ -1,5 +1,6 @@
 package dev.greenn.backend.shopping_list;
 
+import jakarta.validation.Valid;
 import org.springframework.data.mongodb.core.MongoAction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +26,7 @@ public class ShoppingListController {
         return shoppingListService.getListsWithUserId(id);
     }
     @PostMapping
-    public Mono<ShoppingList> createList(@RequestBody ShoppingList shoppingList, @AuthenticationPrincipal Jwt jwt){
+    public Mono<ShoppingList> createList(@Valid @RequestBody ShoppingList shoppingList, @AuthenticationPrincipal Jwt jwt){
         shoppingList.getAllowedUsers().add(jwt.getSubject());
         return shoppingListService.createList(shoppingList);
     }

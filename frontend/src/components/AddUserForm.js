@@ -1,15 +1,12 @@
 import { useState } from "react";
-import { createItem } from "../api/items";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Fab } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Fab, InputAdornment } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import {addUserToList} from "../api/lists";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { addUserToList } from "../api/lists";
 
-const AddUserForm = ({ onItemCreated, listId }) => {
+const AddUserForm = ({ listId }) => {
     const [id, setId] = useState("");
     const [open, setOpen] = useState(false);
-
-
-
 
     const handleOpen = () => {
         setOpen(true);
@@ -22,8 +19,8 @@ const AddUserForm = ({ onItemCreated, listId }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!id.trim()) return;
-        try {const response = await addUserToList( listId, id );
-           // onItemCreated(response.data);
+        try {
+            await addUserToList(listId, id);
             setId("");
             handleClose();
         } catch (error) {
@@ -35,34 +32,70 @@ const AddUserForm = ({ onItemCreated, listId }) => {
         <>
             <Fab
                 color="primary"
-                aria-label="add"
+                aria-label="add user"
                 onClick={handleOpen}
-                sx={{ marginBottom: 2 }}
+                size="medium"
+                sx={{ 
+                    boxShadow: 3,
+                    '&:hover': {
+                        boxShadow: 6
+                    }
+                }}
             >
-                <AddIcon />
+                <PersonAddIcon />
             </Fab>
 
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>Dodaj użytkownika do listy</DialogTitle>
+            <Dialog 
+                open={open} 
+                onClose={handleClose}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle sx={{ 
+                    bgcolor: 'primary.main', 
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                }}>
+                    <PersonAddIcon />
+                    Dodaj użytkownika do listy
+                </DialogTitle>
                 <form onSubmit={handleSubmit}>
-                    <DialogContent>
+                    <DialogContent sx={{ pt: 3 }}>
                         <TextField
                             autoFocus
-                            margin="dense"
-                            label="Nazwa"
+                            label="Identyfikator użytkownika"
                             fullWidth
                             variant="outlined"
                             value={id}
                             onChange={(e) => setId(e.target.value)}
+                            required
+                            helperText="Wprowadź identyfikator użytkownika, którego chcesz dodać do listy"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <PersonAddIcon color="primary" />
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
-
-
-
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleClose}>Anuluj</Button>
-                        <Button type="submit" variant="contained" color="primary">
-                            Dodaj
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button 
+                            onClick={handleClose} 
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Anuluj
+                        </Button>
+                        <Button 
+                            type="submit" 
+                            variant="contained" 
+                            color="primary"
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Dodaj użytkownika
                         </Button>
                     </DialogActions>
                 </form>

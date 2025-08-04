@@ -1,8 +1,10 @@
 package dev.greenn.backend.shopping_list;
 
+import dev.greenn.backend.exception.NotFoundException;
 import dev.greenn.backend.item.Item;
 import dev.greenn.backend.item.ItemService;
 import dev.greenn.backend.user.UserService;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -32,24 +34,34 @@ public class ShoppingListService {
     }
 
     public Flux<ShoppingList> getListsWithUserId(String id) {
-        return shoppingListRepository.findByAllowedUsersContaining(id);
+        return shoppingListRepository.findByAllowedUsersContaining(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Lists with id: " + id + " not found")));
 
     }
 
     public Mono<Void> deleteListWithItems(String id) {
         return itemService.findAllByListId(id)
-                .flatMap(item -> itemService.deleteItem(item.getId()))
-                .then(shoppingListRepository.deleteById(id));
+                .collectList()
+                .flatMap(items -> {
+                    if (items.isEmpty()) {
+                        return Mono.error(new NotFoundException("List with id: " + id + " not found"));
+                    }
+                    return Flux.fromIterable(items)
+                            .flatMap(item -> itemService.deleteItem(item.getId()))
+                            .then(shoppingListRepository.deleteById(id));
+                });
     }
+
 
     public Mono<Void> addUserToList(String listId, String userId) {
         return userService.userExistsById(userId)
                 .flatMap(exists -> {
                     if (!exists) {
-                        return Mono.error(new RuntimeException("User not found"));
+                        return Mono.error(new NotFoundException("User with id: "+  userId + " not found"));
                     }
 
                     return shoppingListRepository.findById(listId)
+                            .switchIfEmpty(Mono.error(new NotFoundException("List with id: " + listId + " not found")))
                             .flatMap(list -> {
                                 list.getAllowedUsers().add(userId);
                                 return shoppingListRepository.save(list);

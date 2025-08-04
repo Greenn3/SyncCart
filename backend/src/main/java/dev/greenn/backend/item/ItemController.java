@@ -2,6 +2,7 @@ package dev.greenn.backend.item;
 
 import dev.greenn.backend.item.Item;
 import dev.greenn.backend.item.ItemService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -24,7 +25,7 @@ private final ItemService itemService;
     }
 
     @PostMapping
-    public Mono<Item> createItem(@RequestBody Item item, @AuthenticationPrincipal Jwt jwt){
+    public Mono<Item> createItem(@Valid @RequestBody Item item, @AuthenticationPrincipal Jwt jwt){
         item.setCreatorId(jwt.getSubject());
         return itemService.createItem(item);
     }

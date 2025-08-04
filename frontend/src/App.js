@@ -4,24 +4,26 @@ import { jwtDecode } from 'jwt-decode';
 import {
     Typography,
     AppBar,
-    CardActions,
-    CardContent,
-    CardMedia,
     CssBaseline,
-    Grid,
     Toolbar,
     Container,
-    Box, Button, Stack
+    Box,
+    Button,
+    Paper,
+    Divider,
+    Grid,
+    Stack,
+    useTheme
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ListForm from "./components/ListForm";
 import ListDisplay from "./components/ListDisplay";
-import {deleteList, getAllLists} from "./api/lists";
-import {deleteItem, getItemsByListId} from "./api/items";
+import { deleteList, getAllLists } from "./api/lists";
+import { deleteItem, getItemsByListId } from "./api/items";
 import ItemForm from "./components/ItemForm";
 import ItemDisplay from "./components/ItemDisplay";
-import {attachIdToken, clearIdToken} from "./axiosInstance";
-import {sendIdTokenToBackend} from "./api/users";
+import { attachIdToken, clearIdToken } from "./axiosInstance";
+import { sendIdTokenToBackend } from "./api/users";
 import AddUserForm from "./components/AddUserForm";
 function App() {
 
@@ -139,63 +141,128 @@ function App() {
         <div>
         <CssBaseline/>
 
-            <AppBar position="relative">
-                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-
-                    {/* Lewa strona */}
+            <AppBar 
+                position="relative" 
+                elevation={0} 
+                sx={{ 
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(8px)'
+                }}
+                color="inherit"
+            >
+                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5 }}>
+                    {/* Logo and brand */}
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ShoppingCartIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6">SyncCart</Typography>
+                        <ShoppingCartIcon sx={{ mr: 1.5, fontSize: 30, color: 'primary.main' }} />
+                        <Typography 
+                            variant="h5" 
+                            component="div" 
+                            sx={{ 
+                                fontWeight: 'bold',
+                                letterSpacing: '0.5px',
+                                color: 'primary.main'
+                            }}
+                        >
+                            SyncCart
+                        </Typography>
                     </Box>
 
-                    {/* Prawa strona */}
+                    {/* User authentication */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         {user ? (
                             <>
-                                <Typography variant="body1">
-                                    Zalogowano jako: <strong>{user.name}</strong>
+                                <Typography variant="body1" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    Zalogowano jako: <Box component="span" sx={{ fontWeight: 'bold' }}>{user.name}</Box>
                                 </Typography>
-                                <Button variant="outlined" color="inherit" onClick={handleLogout}>
+                                <Button 
+                                    variant="outlined" 
+                                    color="primary" 
+                                    onClick={handleLogout}
+                                    sx={{ 
+                                        borderRadius: 2,
+                                        textTransform: 'none',
+                                        px: 2
+                                    }}
+                                >
                                     Wyloguj
                                 </Button>
                             </>
                         ) : (
-                            <GoogleLogin onSuccess={handleLoginSuccess} onError={() => console.log("Login failed")} />
+                            <GoogleLogin 
+                                onSuccess={handleLoginSuccess} 
+                                onError={() => console.log("Login failed")} 
+                            />
                         )}
                     </Box>
-
                 </Toolbar>
             </AppBar>
             <main>
-                <div>
-                    <Container>
-                        <div style={{ padding: "2rem" }}>
+                <Container maxWidth="lg" sx={{ py: 5 }}>
+                    <Paper 
+                        elevation={0} 
+                        sx={{ 
+                            p: 4, 
+                            mb: 5, 
+                            border: '1px solid rgba(0, 0, 0, 0.04)',
+                            borderRadius: 2,
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                            <Typography variant="h5" component="h1" sx={{ flexGrow: 1, fontWeight: 500, color: 'primary.dark' }}>
+                                Moje listy zakupów
+                            </Typography>
+                            <ListForm onListCreated={handleListCreated} />
+                        </Box>
+                        <ListDisplay 
+                            lists={lists} 
+                            onListSelect={setSelectedListId} 
+                            selectedListId={selectedListId} 
+                            onDelete={handleListDelete}
+                        />
+                    </Paper>
 
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                                <Stack  direction="row" spacing={2}>
-                                <h1 style={{ marginRight: '1rem' }}>Moje listy zakupów</h1>
-                                <ListForm onListCreated={handleListCreated} />
-                                </Stack>
-                            </div>
-                            <ListDisplay lists={lists} onListSelect={setSelectedListId} selectedListId={selectedListId}  onDelete={handleListDelete}/>
+                    {selectedListId && (
+                        <>
+                            <Paper 
+                                elevation={0} 
+                                sx={{ 
+                                    p: 4, 
+                                    mb: 5, 
+                                    border: '1px solid rgba(0, 0, 0, 0.04)',
+                                    borderRadius: 2,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                                    <Typography variant="h5" component="h2" sx={{ flexGrow: 1, fontWeight: 500, color: 'primary.dark' }}>
+                                        Przedmioty
+                                    </Typography>
+                                    <ItemForm onItemCreated={handleItemCreated} listId={selectedListId} />
+                                </Box>
+                                <ItemDisplay items={items} onDelete={handleItemDelete}/>
+                            </Paper>
 
-                            {selectedListId && (
-                                <>
-                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem', marginTop: '2rem' }}>
-                                        <h1 style={{ marginRight: '1rem' }}>Przedmioty</h1>
-                                        <ItemForm onItemCreated={handleItemCreated} listId={selectedListId} />
-                                    </div>
-                                    <ItemDisplay items={items} onDelete={handleItemDelete}/>
-
-                                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '2rem' }}>
-                                        <h3 style={{ marginRight: '1rem' }}> Dodaj użytkownika do listy</h3>
-                                        <AddUserForm listId={selectedListId} />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </Container>
-                </div>
+                            <Paper 
+                                elevation={0} 
+                                sx={{ 
+                                    p: 4, 
+                                    border: '1px solid rgba(0, 0, 0, 0.04)',
+                                    borderRadius: 2,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                    <Typography variant="h5" component="h3" sx={{ flexGrow: 1, fontWeight: 500, color: 'primary.dark' }}>
+                                        Dodaj użytkownika do listy
+                                    </Typography>
+                                    <AddUserForm listId={selectedListId} />
+                                </Box>
+                            </Paper>
+                        </>
+                    )}
+                </Container>
             </main>
 
         </div>

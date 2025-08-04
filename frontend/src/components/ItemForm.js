@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { createItem } from "../api/items";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Fab } from "@mui/material";
+import { 
+    Button, 
+    Dialog, 
+    DialogActions, 
+    DialogContent, 
+    DialogTitle, 
+    TextField, 
+    Fab, 
+    Grid,
+    InputAdornment
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import StoreIcon from "@mui/icons-material/Store";
 
 const ItemForm = ({ onItemCreated, listId }) => {
     const [name, setName] = useState("");
@@ -9,9 +23,6 @@ const ItemForm = ({ onItemCreated, listId }) => {
     const [price, setPrice] = useState("");
     const [store, setStore] = useState("");
     const [open, setOpen] = useState(false);
-
-
-
 
     const handleOpen = () => {
         setOpen(true);
@@ -30,7 +41,7 @@ const ItemForm = ({ onItemCreated, listId }) => {
             setName("");
             setQuantity("");
             setPrice("");
-            setStore("")
+            setStore("");
             handleClose();
         } catch (error) {
             console.error("Błąd przy dodawaniu pozycji:", error);
@@ -43,55 +54,118 @@ const ItemForm = ({ onItemCreated, listId }) => {
                 color="primary" 
                 aria-label="add" 
                 onClick={handleOpen}
-                sx={{ marginBottom: 2 }}
+                sx={{ 
+                    boxShadow: 3,
+                    '&:hover': {
+                        boxShadow: 6
+                    }
+                }}
             >
                 <AddIcon />
             </Fab>
 
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>Dodaj nowy przedmiot</DialogTitle>
+            <Dialog 
+                open={open} 
+                onClose={handleClose}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle sx={{ 
+                    bgcolor: 'primary.main', 
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                }}>
+                    <ShoppingCartIcon />
+                    Dodaj nowy przedmiot
+                </DialogTitle>
                 <form onSubmit={handleSubmit}>
-                    <DialogContent>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            label="Nazwa"
-                            fullWidth
-                            variant="outlined"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            label="Ilość"
-                            fullWidth
-                            variant="outlined"
-                            value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
-                        />
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            label="Cena"
-                            fullWidth
-                            variant="outlined"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                        />
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            label="Sklep"
-                            fullWidth
-                            variant="outlined"
-                            value={store}
-                            onChange={(e) => setStore(e.target.value)}
-                        />
+                    <DialogContent sx={{ pt: 3 }}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <TextField
+                                    autoFocus
+                                    label="Nazwa przedmiotu"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <ShoppingCartIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Ilość"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <InventoryIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Cena"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={price}
+                                    onChange={(e) => setPrice(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LocalOfferIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                        endAdornment: <InputAdornment position="end">zł</InputAdornment>,
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Sklep"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={store}
+                                    onChange={(e) => setStore(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <StoreIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleClose}>Anuluj</Button>
-                        <Button type="submit" variant="contained" color="primary">
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button 
+                            onClick={handleClose} 
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Anuluj
+                        </Button>
+                        <Button 
+                            type="submit" 
+                            variant="contained" 
+                            color="primary"
+                            sx={{ borderRadius: 2 }}
+                        >
                             Dodaj przedmiot
                         </Button>
                     </DialogActions>
