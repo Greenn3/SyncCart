@@ -24,4 +24,5 @@ public class Item {
     String quantity;
     String price;
     String store;
+    boolean completed = false;
 }

@@ -14,23 +14,62 @@ import {
     Box,
     Chip,
     Divider,
-    useTheme
+    useTheme,
+    Menu,
+    MenuItem,
+    TextField,
+    InputAdornment
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import StoreIcon from '@mui/icons-material/Store';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { updateItem, updateCompleted } from '../api/items';
+import axiosInstance from "../axiosInstance";
 
-const ItemDisplay = ({ items, onDelete }) => {
+const ItemDisplay = ({ items, onDelete, onUpdate }) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editItemData, setEditItemData] = useState({
+        name: "",
+        quantity: "",
+        price: "",
+        store: ""
+    });
     const theme = useTheme();
 
-    const handleDeleteClick = (event, itemId) => {
+    const handleMenuOpen = (event, item) => {
         event.stopPropagation();
-        setItemToDelete(itemId);
+        setMenuAnchorEl(event.currentTarget);
+        setSelectedItem(item);
+    };
+
+    const handleMenuClose = () => {
+        setMenuAnchorEl(null);
+    };
+
+    const handleDeleteClick = () => {
+        setItemToDelete(selectedItem.id);
         setDeleteDialogOpen(true);
+        handleMenuClose();
+    };
+
+    const handleEditClick = () => {
+        setEditItemData({
+            name: selectedItem.name || "",
+            quantity: selectedItem.quantity || "",
+            price: selectedItem.price || "",
+            store: selectedItem.store || ""
+        });
+        setEditDialogOpen(true);
+        handleMenuClose();
     };
 
     const handleConfirmDelete = () => {
@@ -45,6 +84,48 @@ const ItemDisplay = ({ items, onDelete }) => {
         setDeleteDialogOpen(false);
         setItemToDelete(null);
     };
+
+    const handleEditDialogClose = () => {
+        setEditDialogOpen(false);
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        if (!editItemData.name.trim()) return;
+
+        try {
+            const response = await updateItem(selectedItem.id, {
+                ...editItemData,
+                listId: selectedItem.listId,
+                id: selectedItem.id
+            });
+
+            // Notify parent component about the update
+            if (onUpdate) {
+                onUpdate(response.data);
+            }
+
+            setEditDialogOpen(false);
+        } catch (error) {
+            console.error("Błąd przy aktualizacji przedmiotu:", error);
+        }
+    };
+
+    async function handleCompleteClick() {
+        try {
+            const newCompletedStatus = !selectedItem.completed;
+            const response = await updateCompleted(selectedItem.id, newCompletedStatus);
+
+            // Notify parent component about the update
+            if (onUpdate) {
+                onUpdate(response.data);
+            }
+
+            handleMenuClose();
+        } catch (error) {
+            console.error("Błąd przy aktualizacji statusu ukończenia:", error);
+        }
+    }
 
     return (
         <>
@@ -67,7 +148,8 @@ const ItemDisplay = ({ items, onDelete }) => {
                                 overflow: 'hidden',
                                 border: '1px solid rgba(0, 0, 0, 0.04)',
                                 boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.03)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.7)'
+                                backgroundColor: item.completed ? 'rgba(220, 220, 220, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                                opacity: item.completed ? 0.8 : 1
                             }}
                         >
                             <Box sx={{ 
@@ -78,8 +160,8 @@ const ItemDisplay = ({ items, onDelete }) => {
                             }}>
                                 <IconButton
                                     size="small"
-                                    onClick={(e) => handleDeleteClick(e, item.id)}
-                                    color="error"
+                                    onClick={(e) => handleMenuOpen(e, item)}
+                                    color="primary"
                                     sx={{
                                         backgroundColor: 'rgba(255, 255, 255, 0.7)',
                                         '&:hover': {
@@ -88,7 +170,7 @@ const ItemDisplay = ({ items, onDelete }) => {
                                         boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)'
                                     }}
                                 >
-                                    <DeleteIcon fontSize="small" />
+                                    <MoreVertIcon fontSize="small" />
                                 </IconButton>
                             </Box>
 
@@ -138,18 +220,54 @@ const ItemDisplay = ({ items, onDelete }) => {
                                     </Typography>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center',  mb: 1.5 }}>
                                     <StoreIcon sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: 20 }} />
                                     <Typography variant="body1">
                                         <Box component="span" sx={{ fontWeight: 'bold', mr: 1 }}>Sklep:</Box>
                                         {item.store || 'Nie określono'}
                                     </Typography>
                                 </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <CheckCircleIcon sx={{ color: item.completed ? 'success.main' : theme.palette.text.secondary, mr: 1, fontSize: 20 }} />
+                                    <Typography variant="body1">
+                                        <Box component="span" sx={{ fontWeight: 'bold', mr: 1 }}>Ukończono:</Box>
+                                        {item.completed ? 'Tak' : 'Nie'}
+                                    </Typography>
+                                </Box>
+
                             </CardContent>
                         </Card>
                     </Grid>
                 ))}
             </Grid>
+
+            {/* Menu */}
+            <Menu
+                anchorEl={menuAnchorEl}
+                open={Boolean(menuAnchorEl)}
+                onClose={handleMenuClose}
+                PaperProps={{
+                    elevation: 2,
+                    sx: {
+                        borderRadius: 2,
+                        minWidth: 120,
+                        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.08)'
+                    }
+                }}
+            >
+                <MenuItem onClick={handleEditClick} sx={{ gap: 1 }}>
+                    <EditIcon fontSize="small" color="primary" />
+                    <Typography>Modyfikuj</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleDeleteClick} sx={{ gap: 1 }}>
+                    <DeleteIcon fontSize="small" color="error" />
+                    <Typography>Usuń</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleCompleteClick} sx={{ gap: 1 }}>
+                    <CheckCircleIcon fontSize="small" color="success" />
+                    <Typography>{selectedItem && selectedItem.completed ? 'Oznacz jako nieukończone' : 'Oznacz jako ukończone'}</Typography>
+                </MenuItem>
+            </Menu>
 
             {/* Confirmation Dialog */}
             <Dialog
@@ -201,6 +319,115 @@ const ItemDisplay = ({ items, onDelete }) => {
                         Usuń
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+            {/* Edit Dialog */}
+            <Dialog 
+                open={editDialogOpen} 
+                onClose={handleEditDialogClose}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle sx={{ 
+                    bgcolor: 'primary.main', 
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                }}>
+                    <EditIcon />
+                    Modyfikuj przedmiot
+                </DialogTitle>
+                <form onSubmit={handleEditSubmit}>
+                    <DialogContent sx={{ pt: 3 }}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <TextField
+                                    autoFocus
+                                    label="Nazwa przedmiotu"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={editItemData.name}
+                                    onChange={(e) => setEditItemData({...editItemData, name: e.target.value})}
+                                    required
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <ShoppingCartIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Ilość"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={editItemData.quantity}
+                                    onChange={(e) => setEditItemData({...editItemData, quantity: e.target.value})}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <InventoryIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    label="Cena"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={editItemData.price}
+                                    onChange={(e) => setEditItemData({...editItemData, price: e.target.value})}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LocalOfferIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                        endAdornment: <InputAdornment position="end">zł</InputAdornment>,
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Sklep"
+                                    fullWidth
+                                    variant="outlined"
+                                    value={editItemData.store}
+                                    onChange={(e) => setEditItemData({...editItemData, store: e.target.value})}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <StoreIcon color="primary" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button 
+                            onClick={handleEditDialogClose} 
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Anuluj
+                        </Button>
+                        <Button 
+                            type="submit" 
+                            variant="contained" 
+                            color="primary"
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Zapisz zmiany
+                        </Button>
+                    </DialogActions>
+                </form>
             </Dialog>
         </>
     );

@@ -32,4 +32,23 @@ public class ItemService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Item with id " + id + " not found")))
                 .flatMap(item -> itemRepository.deleteById(id));
     }
+
+    public Mono<Item> updateItem(Item item, String id) {
+        return itemRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Item with id " + id + " not found") ))
+                .flatMap(existingItem -> {
+                    item.setId(id);
+                    return itemRepository.save(item);
+                });
+    }
+
+    public Mono<Item> updateCompleted(Boolean completed, String id) {
+        return itemRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Item with id " + id + " not found")))
+                .flatMap(item -> {
+                    item.setCompleted(completed);
+                 return itemRepository.save(item);
+
+                });
+    }
 }

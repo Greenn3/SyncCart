@@ -42,5 +42,15 @@ private final ItemService itemService;
         return itemService.deleteItem(id)
                 .thenReturn(ResponseEntity.noContent().build());
     }
+    @PutMapping("/{id}")
+    public Mono<Item> updateItem (@RequestBody Item item, @PathVariable String id){
+        return itemService.updateItem(item, id);
+    }
+    @PatchMapping("/{id}")
+    public Mono<Item> updateCompleted(@RequestBody Boolean completed, @PathVariable String id){
+        return itemService.updateCompleted(completed, id);
+    }
+
+
 
 }

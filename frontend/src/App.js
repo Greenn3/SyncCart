@@ -107,6 +107,14 @@ function App() {
         setItems((prev) => [...prev, newItem]);
     };
 
+    const handleItemUpdate = (updatedItem) => {
+        setItems((prev) => 
+            prev.map((item) => 
+                item.id === updatedItem.id ? updatedItem : item
+            )
+        );
+    };
+
     useEffect(() => {
         if (user) {
             fetchLists();  // tylko jeśli ktoś zalogowany
@@ -241,7 +249,7 @@ function App() {
                                     </Typography>
                                     <ItemForm onItemCreated={handleItemCreated} listId={selectedListId} />
                                 </Box>
-                                <ItemDisplay items={items} onDelete={handleItemDelete}/>
+                                <ItemDisplay items={items} onDelete={handleItemDelete} onUpdate={handleItemUpdate}/>
                             </Paper>
 
                             <Paper 
